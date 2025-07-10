@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>All Users</title>
+</head>
+<body>
+<h2>All Registered Users</h2>
+<table border="1">
+    <tr>
+        <th>Username</th>
+        <th>Role</th>
+    </tr>
+    <tr th:each="user : ${users}">
+        <td th:text="${user.username}"></td>
+        <td th:text="${user.role}"></td>
+    </tr>
+</table>
+<a th:href="@{/admin/sessions}">view all sessions</a><br>
+<a th:href="@{/chat}">Back to Chat</a><br>
+<a th:href="@{/admin/dashboard}">Go to Dashboard</a>
+</body>
+</html>

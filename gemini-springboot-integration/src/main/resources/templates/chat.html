@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Gemini Chat</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+</head>
+<body>
+<h2>Gemini AI Chat</h2>
+
+<!-- Session Dropdown -->
+<form method="get" action="/chat">
+    <label for="sessionSelect">Select Chat Session:</label>
+    <select id="sessionSelect" name="sessionId" onchange="this.form.submit()">
+        <option th:each="s : ${sessions}"
+                th:value="${s.id}"
+                th:text="${s.title}"
+                th:selected="${selectedSession != null and s.id == selectedSession.id}">
+        </option>
+    </select>
+
+</form>
+
+<ul style="margin-top: 10px;">
+    <li th:each="s : ${sessions}">
+        <b th:text="${s.title}"></b>
+
+        <!-- Edit form -->
+        <form th:action="@{/chat/session/edit}" method="post" style="display:inline;">
+            <input type="hidden" name="sessionId" th:value="${s.id}"/>
+            <input type="text" name="newTitle" placeholder="Rename..." required/>
+            <button type="submit">Edit</button>
+        </form>
+
+        <!-- Delete form -->
+        <form th:action="@{/chat/session/delete}" method="post" style="display:inline;">
+            <input type="hidden" name="sessionId" th:value="${s.id}"/>
+            <button type="submit" onclick="return confirm('Are you sure to delete this session?')">Delete</button>
+        </form>
+    </li>
+</ul>
+
+<!-- New Session Form -->
+<form method="post" action="/chat/session" style="margin-top: 10px;">
+    <input type="text" name="title" placeholder="New Session Title" required/>
+    <button type="submit">Create New Session</button>
+</form>
+
+<!-- Prompt Input -->
+<form onsubmit="sendPrompt(event)" style="margin-top: 20px;">
+    <input type="text" id="promptInput" placeholder="Enter your prompt" size="60" required>
+    <button type="submit">Send</button>
+</form>
+
+<!-- Typing Area -->
+<div id="typingArea" style="margin-top: 20px;">
+    <h3>AI is typing...</h3>
+    <p id="streamOutput"></p>
+</div>
+
+<!-- Past Chats -->
+<h2>Your Past Chats</h2>
+<ul id="chatHistory">
+    <li th:each="entry : ${history}">
+        <b th:text="${#temporals.format(entry.timestamp, 'dd MMM yyyy HH:mm')}"></b><br>
+        <i>Prompt:</i> <span th:text="${entry.prompt}"></span><br>
+        <i>Response:</i> <span th:text="${entry.response}"></span><br><br>
+        <form th:action="@{/chat/entry/delete}" method="post" style="margin-top: 5px;">
+            <input type="hidden" name="entryId" th:value="${entry.id}" />
+            <input type="hidden" name="sessionId" th:value="${selectedSession.id}" />
+            <button type="submit">Delete</button>
+        </form>
+        <br>
+    </li>
+</ul>
+
+<div style="margin-top: 20px;">
+    <form th:action="@{/chat/export/json}" method="get" style="display: inline;">
+        <input type="hidden" name="sessionId" th:value="${selectedSession != null ? selectedSession.id : 0}" />
+        <button type="submit">Export as JSON</button>
+    </form>
+
+    <form th:action="@{/chat/export/pdf}" method="get" style="display: inline;">
+        <input type="hidden" name="sessionId" th:value="${selectedSession != null ? selectedSession.id : 0}" />
+        <button type="submit">Export as PDF</button>
+    </form>
+</div>
+
+<div th:if="${isAdmin}">
+    <a th:href="@{/admin/dashboard}">Go to Dashboard</a>
+</div>
+
+<a th:href="@{/logout}">Logout</a>
+
+<!-- WebSocket Script -->
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    let stompClient = null;
+    let lastPrompt = "";
+    let username = /*[[${username}]]*/ "guest";
+    let sessionId = [[${selectedSession != null ? selectedSession.id : 0}]];
+
+    function connect() {
+        const socket = new SockJS('/ws');
+        stompClient = Stomp.over(socket);
+        stompClient.connect({}, () => {
+            stompClient.subscribe('/topic/responses/' + username, function (msg) {
+                const response = JSON.parse(msg.body);
+                document.getElementById('streamOutput').innerText = response.content;
+                if (response.done) {
+                    document.getElementById("typingArea").querySelector("h3").style.display = 'none';
+                     const historyList = document.getElementById("chatHistory");
+                    const listItem = document.createElement("li");
+                    const timestamp = new Date().toLocaleString(); // Approximate timestamp
+                    listItem.innerHTML = `
+                        <b>${timestamp}</b><br>
+                        <i>Prompt:</i> <span>${lastPrompt}</span><br>
+                        <i>Response:</i> <span>${response.content}</span><br><br>
+                    `;
+                    historyList.prepend(listItem);
+                }
+            });
+        });
+    }
+
+    function sendPrompt(event) {
+        event.preventDefault();
+
+        if (!sessionId || sessionId === 0) {
+        alert("Please create or select a chat session before sending a prompt.");
+        return;
+    }
+
+        const prompt = document.getElementById("promptInput").value;
+        lastPrompt = prompt;
+        stompClient.send("/app/sendPrompt", {}, JSON.stringify({
+            username: username,
+            prompt: prompt,
+            sessionId: sessionId
+        }));
+        document.getElementById("streamOutput").innerText = "";
+        document.getElementById("typingArea").querySelector("h3").style.display = 'block';
+        document.getElementById("promptInput").value = "";
+    }
+
+    connect();
+    /*]]>*/
+</script>
+
+</body>
+</html>

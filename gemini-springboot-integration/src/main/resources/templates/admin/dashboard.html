@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Admin Dashboard</title>
+</head>
+<body>
+<h1>Admin Dashboard</h1>
+
+<ul>
+    <li><b>Total Users:</b> <span th:text="${totalUsers}"></span></li>
+    <li><b>Total Chat Sessions:</b> <span th:text="${totalSessions}"></span></li>
+    <li><b>Total Chat Entries:</b> <span th:text="${totalChats}"></span></li>
+</ul>
+
+<h3>Chats per User</h3>
+<table border="1">
+    <thead>
+    <tr>
+        <th>Username</th>
+        <th>Chat Count</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="row : ${userChatCounts}">
+        <td th:text="${row[0]}"></td>
+        <td th:text="${row[1]}"></td>
+    </tr>
+    </tbody>
+</table>
+
+<br>
+<a th:href="@{/admin/users}">View to Users</a>
+</body>
+</html>

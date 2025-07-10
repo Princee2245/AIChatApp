@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Session Chat History</title>
+</head>
+<body>
+
+<h2 th:text="'Chat History for Session: ' + ${sessionTitle}"></h2>
+<p th:text="'User: ' + ${username}"></p>
+
+<table border="1">
+    <thead>
+    <tr>
+        <th>Timestamp</th>
+        <th>Prompt</th>
+        <th>Response</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="entry : ${chatEntries}">
+        <td th:text="${#temporals.format(entry.timestamp, 'dd MMM yyyy HH:mm')}"></td>
+        <td th:text="${entry.prompt}"></td>
+        <td th:text="${entry.response}"></td>
+    </tr>
+    </tbody>
+</table>
+
+<br>
+<a th:href="@{/admin/sessions}">← Back to All Sessions</a>
+
+</body>
+</html>
