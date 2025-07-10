@@ -65,7 +65,7 @@ public class ChatController {
         }
 
         model.addAttribute("selectedSession", selectedSession);
-        System.out.println(sessionId);
+//        System.out.println(sessionId);
         model.addAttribute("history", history);
 
         return "chat";
@@ -84,16 +84,6 @@ public class ChatController {
         return "redirect:/chat?sessionId=" + session.getId();
     }
 
-    @PostMapping("/chat")
-    public String handleChat(@RequestParam String prompt, Model model, Principal principal) {
-        String response = geminiService.getGeminiResponseAndSave(prompt, principal.getName());
-        User user = userRepository.findByUsername(principal.getName()).orElseThrow();
-        List<ChatEntry> history = chatRepository.findByUserOrderByTimestampDesc(user);
-        model.addAttribute("response", response.trim());
-        model.addAttribute("history", history);
-        model.addAttribute("username", principal.getName());
-        return "chat";
-    }
 
     @PostMapping("/chat/session/edit")
     public String editSessionTitle(@RequestParam Long sessionId,

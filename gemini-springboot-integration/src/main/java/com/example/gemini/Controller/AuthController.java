@@ -1,13 +1,10 @@
 package com.example.gemini.Controller;
 
-
 import com.example.gemini.Entity.User;
 import com.example.gemini.Repository.UserRepository;
-import com.example.gemini.Service.GeminiService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 @Controller

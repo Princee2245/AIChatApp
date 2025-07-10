@@ -7,6 +7,7 @@ import com.example.gemini.Repository.ChatRepository;
 import com.example.gemini.Repository.UserRepository;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -20,8 +21,15 @@ public class GeminiService {
     @Autowired
     private ChatRepository chatRepository;
 
-    private static final String API_KEY = "AIzaSyAAGig2XRB0i79mvLDgLkqXYVw0UYIB_n0"; // Replace with your key
-    private static final String URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + API_KEY;
+    private final String API_KEY; // Make it final and non-static
+    private final String URL;     // Also final and non-static
+
+    // Inject API_KEY via constructor
+    public GeminiService(@Value("${gemini.api.key}") String apiKey) {
+        this.API_KEY = apiKey;
+        this.URL = String.format("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=%s", API_KEY);
+    }
+
 
     public String getGeminiResponseAndSave(String prompt,String username) {
         RestTemplate restTemplate = new RestTemplate();
